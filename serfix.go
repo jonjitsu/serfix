@@ -9,16 +9,20 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	// "strconv"
 )
 
 const (
-	helpFlagUsage  = "Help and usage instructions"
-	forceFlagUsage = "Force overwrite of destination file if it exists"
-	readBuffer     = 2 * 1024 * 1024
+	helpFlagUsage       = "Help and usage instructions"
+	forceFlagUsage      = "Force overwrite of destination file if it exists"
+	readBufferFlagUsage = "Set read buffer"
+	readBuffer          = 2 * 1024 * 1024
 )
 
 var helpPtr = flag.Bool("help", false, helpFlagUsage)
 var forcePtr = flag.Bool("force", false, forceFlagUsage)
+var readBufferPtr = flag.Int("read-buffer", readBuffer, readBufferFlagUsage)
+
 var counter int = 0
 var lexer = regexp.MustCompile(`s:\d+:\\?\".*?\\?\";`)
 var re = regexp.MustCompile(`(s:)(\d+)(:\\?\")(.*?)(\\?\";)`)
@@ -28,6 +32,7 @@ func init() {
 	// Short flags too
 	flag.BoolVar(helpPtr, "h", false, helpFlagUsage)
 	flag.BoolVar(forcePtr, "f", false, forceFlagUsage)
+	flag.IntVar(readBufferPtr, "r", readBuffer, readBufferFlagUsage)
 }
 
 func main() {
@@ -78,7 +83,7 @@ func main() {
 		// close out file
 		defer tempfile.Close()
 
-		r := bufio.NewReaderSize(infile, readBuffer)
+		r := bufio.NewReaderSize(infile, *readBufferPtr)
 
 		line, err := r.ReadString('\n')
 		for err == nil {
@@ -124,7 +129,7 @@ func main() {
 		}
 
 	} else {
-		r := bufio.NewReaderSize(os.Stdin, readBuffer)
+		r := bufio.NewReaderSize(os.Stdin, *readBufferPtr)
 
 		line, isPrefix, err := r.ReadLine()
 		for err == nil && !isPrefix {
@@ -154,6 +159,7 @@ func PrintUsage() {
 	fmt.Println("Alt. Usage: cat filename | serfix")
 	fmt.Println("")
 	fmt.Println("\t -f, --force \t\t\t Force overwrite of destination file if it exists.")
+	fmt.Println("\t -r, --read-buffer \t\t\t Set read buffer size.")
 	fmt.Println("\t -h, --help  \t\t\t Print serfix help.")
 	fmt.Println("")
 }
